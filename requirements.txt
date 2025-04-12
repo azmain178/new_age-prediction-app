@@ -1,12 +1,12 @@
-# Core packages
-streamlit==1.24.0
-numpy==1.21.6
-pandas==1.3.5
-Pillow==9.5.0
-scikit-learn==1.0.2
+# Core dependencies
+streamlit<2.0.0
+numpy<2.0.0
+pandas<2.0.0
+Pillow<10.0.0
+scikit-learn<2.0.0
+xgboost<2.0.0
 
-# ML packages
---extra-index-url https://download.pytorch.org/whl/torch_stable.html
-torch==1.9.0+cpu
-torchvision==0.10.0+cpu
-xgboost==1.5.2
+# PyTorch CPU only
+--find-links https://download.pytorch.org/whl/cpu
+torch==1.9.1+cpu
+torchvision==0.10.1+cpu
