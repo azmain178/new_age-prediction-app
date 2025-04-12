@@ -150,10 +150,37 @@ def main():
             gender = st.selectbox("Gender", ["Male", "Female"])
             ap_hi = st.number_input("Systolic Blood Pressure", min_value=80, max_value=200, value=120)
             ap_lo = st.number_input("Diastolic Blood Pressure", min_value=40, max_value=150, value=80)
-            cholesterol = st.selectbox("Cholesterol Level", [1, 2, 3], 
-                                     format_func=lambda x: {1: "Normal", 2: "Above Normal", 3: "Well Above Normal"}[x])
-            glucose = st.selectbox("Glucose Level", [1, 2, 3],
-                                 format_func=lambda x: {1: "Normal", 2: "Above Normal", 3: "Well Above Normal"}[x])
+            
+            # New cholesterol and glucose inputs with numerical values
+            st.write("Cholesterol Level (mg/dL)")
+            cholesterol_type = st.radio("Input type for Cholesterol", ["Categories", "Specific Value"], horizontal=True)
+            if cholesterol_type == "Categories":
+                cholesterol = st.selectbox("Cholesterol Category", [1, 2, 3], 
+                                     format_func=lambda x: {1: "Normal (<200)", 2: "Above Normal (200-239)", 3: "High (≥240)"}[x])
+            else:
+                cholesterol_value = st.number_input("Cholesterol Value (mg/dL)", min_value=100, max_value=500, value=200)
+                # Convert specific value to category
+                if cholesterol_value < 200:
+                    cholesterol = 1
+                elif cholesterol_value < 240:
+                    cholesterol = 2
+                else:
+                    cholesterol = 3
+            
+            st.write("Glucose Level (mg/dL)")
+            glucose_type = st.radio("Input type for Glucose", ["Categories", "Specific Value"], horizontal=True)
+            if glucose_type == "Categories":
+                glucose = st.selectbox("Glucose Category", [1, 2, 3],
+                                 format_func=lambda x: {1: "Normal (<100)", 2: "Above Normal (100-125)", 3: "High (≥126)"}[x])
+            else:
+                glucose_value = st.number_input("Glucose Value (mg/dL)", min_value=50, max_value=300, value=100)
+                # Convert specific value to category
+                if glucose_value < 100:
+                    glucose = 1
+                elif glucose_value < 126:
+                    glucose = 2
+                else:
+                    glucose = 3
 
         if st.button("Predict Age") and uploaded_file is not None:
             with st.spinner("Processing..."):
