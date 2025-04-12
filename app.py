@@ -127,6 +127,24 @@ def preprocess_biomarkers(features, scaler, poly, selector):
     features_selected = selector.transform(features_scaled)
     return features_selected
 
+def validate_age_prediction(age_pred, biomarkers):
+    """Validate and adjust age predictions based on biomarkers"""
+    height, weight = biomarkers[0], biomarkers[1]
+    
+    # Calculate age limits based on height and weight
+    min_age = max(0, min(18, (height - 100) / 2))  # Rough estimate for minimum age
+    max_age = 100
+    
+    # BMI-based adjustment for very young/old predictions
+    bmi = weight / ((height / 100) ** 2)
+    if bmi < 19 and age_pred > 50:  # Low BMI but high age prediction
+        age_pred = age_pred * 0.7  # Reduce prediction
+    elif bmi > 30 and age_pred < 20:  # High BMI but very young prediction
+        age_pred = age_pred * 1.3  # Increase prediction
+        
+    # Clamp the prediction to reasonable bounds
+    return np.clip(age_pred, min_age, max_age)
+
 def main():
     st.title("Age Prediction from Face and Biomarkers")
     st.write("Upload a face image and enter biomarker values to predict age")
@@ -208,15 +226,24 @@ def main():
                 bio_features = preprocess_biomarkers(features, scaler, poly, selector)
                 bio_pred = bio_model.predict(bio_features)[0]
 
-                # Adjust face prediction
+                # Validate and adjust predictions
+                face_pred = validate_age_prediction(face_pred, biomarker_features)
+                bio_pred = validate_age_prediction(bio_pred, biomarker_features)
+
+                # Adjust face prediction with more weight to biomarkers for extreme cases
                 stack_X_face = np.column_stack((face_pred.reshape(1, -1), bio_features))
                 face_pred_adj = face_adjuster.predict(stack_X_face)[0]
+                face_pred_adj = validate_age_prediction(face_pred_adj, biomarker_features)
 
-                # Final stacking prediction
+                # Final stacking prediction with adjusted weights
                 stack_X_hybrid = np.column_stack((face_pred_adj.reshape(1, -1), bio_pred.reshape(1, -1)))
                 final_pred = stacker.predict(stack_X_hybrid)[0]
+                final_pred = validate_age_prediction(final_pred, biomarker_features)
 
-                # Display results
+                # Add confidence scores
+                face_confidence = max(0, 1 - abs(face_pred - bio_pred) / 50)  # Higher confidence if predictions are close
+                
+                # Display results with confidence
                 st.success("Prediction Complete!")
                 col1, col2, col3 = st.columns(3)
                 with col1:
@@ -225,6 +252,11 @@ def main():
                     st.metric("Biomarker-based Age", f"{bio_pred:.1f} years")
                 with col3:
                     st.metric("Combined Prediction", f"{final_pred:.1f} years")
+                
+                # Show confidence information
+                st.info(f"Prediction confidence: {face_confidence:.1%}")
+                if face_confidence < 0.5:
+                    st.warning("Low confidence in prediction - the face and biomarker predictions differ significantly")
 
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
