@@ -1,0 +1,12 @@
+--index-url https://pypi.org/simple
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+streamlit==1.31.0
+numpy==1.26.4
+pandas==2.1.4
+Pillow==10.1.0
+scikit-learn==1.4.0
+xgboost==2.0.3
+torch==2.2.0+cpu
+torchvision==0.17.0+cpu
+torchaudio==2.2.0+cpu
